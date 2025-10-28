@@ -45,6 +45,8 @@ class GroupEstimate:
         missing_count = 0
         predictions = []
 
+        X_ = pd.DataFrame([X_]) if not isinstance(X_, pd.DataFrame) else X_
+
         for _, row in X_.iterrows():
             key = tuple(row[col] for col in X_.columns)
             estimate = self.group_estimates.get(key, np.nan)
