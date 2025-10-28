@@ -45,7 +45,14 @@ class GroupEstimate:
         missing_count = 0
         predictions = []
 
-        X_ = pd.DataFrame([X_]) if not isinstance(X_, pd.DataFrame) else X_
+        if isinstance(X_, pd.Series):
+            X_ = X_.to_frame().T
+        elif isinstance(X_, dict):
+            X_ = pd.DataFrame([X_])
+        elif isinstance(X_, list):
+            X_ = pd.DataFrame(X_)
+        elif not isinstance(X_, pd.DataFrame):
+            raise TypeError("X_ must be a DataFrame, Series, dict, or list of dicts")
 
         for _, row in X_.iterrows():
             key = tuple(row[col] for col in X_.columns)
