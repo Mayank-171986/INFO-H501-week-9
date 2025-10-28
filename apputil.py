@@ -2,31 +2,33 @@ import pandas as pd
 import numpy as np
 import statistics
 
+"""
+A class to estimate group-level statistics (mean or median) for categorical data.
+"""
 class GroupEstimate:
-    def __init__(self, estimate="mean"):
-        """
-        Initialize the estimator with strategy: 'mean' or 'median'.
-        """
+    def __init__(self, estimate):
+        
         if estimate not in ("mean", "median"):
             raise ValueError("estimate must be 'mean' or 'median'")
         self.estimate_type = estimate
         self.group_estimates = {}
 
+    """_
+    fit(X, y): Fit the model using categorical DataFrame X and 1-D array y.
+    """
     def fit(self, X, y):
-        """
-        Fit the model using categorical DataFrame X and 1-D array y.
-        Stores group-level estimates only.
-        """
+
+        #Combine `X` and `y` into a shared pandas DataFrame
         if len(X) != len(y):
             raise ValueError("X and y must be the same length")
-        if pd.isnull(y).any():
-            raise ValueError("y must not contain missing values")
 
         df = X.copy()
         df["_target"] = y
 
+        #Group the DataFrame by the columns in `X`
         grouped = df.groupby(list(X.columns))
-
+    
+        #Calculate the estimate for each group
         for group_keys, group_df in grouped:
             values = group_df["_target"].tolist()
             if self.estimate_type == "mean":
@@ -35,19 +37,10 @@ class GroupEstimate:
                 estimate_value = statistics.median(values)
             self.group_estimates[group_keys] = estimate_value
 
+        """
+        Predict estimates for new observations in X_. Returns a NumPy array of estimates.
+        """
     def predict(self, X_):
-        """
-        Predict estimates for new observations in X_.
-        Returns a NumPy array of estimates.
-        """
-        if isinstance(X_, pd.Series):
-            X_ = X_.to_frame().T
-        elif isinstance(X_, dict):
-            X_ = pd.DataFrame([X_])
-        elif isinstance(X_, list):
-            X_ = pd.DataFrame(X_)
-        elif not isinstance(X_, pd.DataFrame):
-            raise TypeError("X_ must be a DataFrame, Series, dict, or list of dicts")
 
         missing_count = 0
         predictions = []
@@ -64,11 +57,3 @@ class GroupEstimate:
 
         return np.array(predictions)
 
-    def __repr__(self):
-        """
-        Display stored group estimates.
-        """
-        return '\n'.join(
-            f"{group}: {self.estimate_type}={value:.2f}"
-            for group, value in self.group_estimates.items()
-        )
